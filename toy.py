@@ -3,6 +3,7 @@ import math
 from torch.distributions import Uniform, Bernoulli, Normal, Uniform
 
 class Toy2D_Task1():
+    # Squares
     def sample(self, num_samples):
         x = Uniform(-1, 1).sample((num_samples, 1))       
         a = Bernoulli(0.5).sample((num_samples, 1))        
@@ -22,6 +23,7 @@ class Toy2D_Task1():
         return density
 
 class Toy2D_Task2():
+    # Half Gaussian
     def sample(self, num_samples):
         x = Uniform(-1, 1).sample((num_samples, 1))
         r = torch.cat([ torch.cos(x * math.pi), 
@@ -49,6 +51,7 @@ class Toy2D_Task2():
         return density
 
 class Toy2D_Task3():
+    # Gaussian Stick
     def sample(self, num_samples):
         x = Uniform(-1, 1).sample((num_samples, 1))
         c = (-0.75 + x) / 2
@@ -79,6 +82,7 @@ class Toy2D_Task3():
         return density
 
 class Toy2D_Task4():
+    # Elastic Ring
     def sample(self, num_samples):
         x = Uniform(-1, 1).sample((num_samples, 1))
         d = Uniform(0, 2).sample((num_samples, 1))
