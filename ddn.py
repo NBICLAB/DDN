@@ -122,26 +122,26 @@ class DDN(nn.Module):
         y = self.conv_linears(zs).view(-1, self.target_dim * self.channels, self.width)
         logits = self.estimator(y)
 
-        log_mess = F.log_softmax(logits, dim=2)
+        log_mass = F.log_softmax(logits, dim=2)
 
         if self.training:
             targets_bin_idx = torch.searchsorted(self.bins, targets.T.contiguous(), right=True).T - 1
-            loss = F.nll_loss(log_mess.reshape(-1, self.num_bins), targets_bin_idx.flatten())
+            loss = F.nll_loss(log_mass.reshape(-1, self.num_bins), targets_bin_idx.flatten())
             loss += self.beta * kld        
-            return log_mess, loss
+            return log_mass, loss
         else:
-            return log_mess
+            return log_mass
 
     def loss(self, outputs, targets):
-        log_mess, loss = outputs
+        log_mass, loss = outputs
         return loss
 
     @torch.no_grad()
     def __conditional_bin_logprobs(self, x, y, mask=None):
         self.eval()
         self.target_range = self.target_range.to(y.device)
-        bin_logmess = self.forward(x, y, mask)
-        bin_logprobs = bin_logmess - torch.log(self.target_range[:, 1:] - self.target_range[:, :1])\
+        bin_logmass = self.forward(x, y, mask)
+        bin_logprobs = bin_logmass - torch.log(self.target_range[:, 1:] - self.target_range[:, :1])\
              + math.log(self.num_bins) 
         return bin_logprobs
 
@@ -196,8 +196,8 @@ class DDN(nn.Module):
         mask = torch.zeros_like(samples)
         for dim_idx in perm:
             with torch.no_grad():
-                bin_logmess = self.forward(condition, samples, mask)
-            dist = Categorical(probs=bin_logmess[:, dim_idx, :].exp())
+                bin_logmass = self.forward(condition, samples, mask)
+            dist = Categorical(probs=bin_logmass[:, dim_idx, :].exp())
             bin_idx = dist.sample()
             v = self.bins[dim_idx, bin_idx] 
             v = v + torch.rand_like(v) * (self.target_range[dim_idx, 1] - self.target_range[dim_idx, 0]) / self.num_bins
@@ -220,8 +220,8 @@ class DDN(nn.Module):
         else:
             samples = torch.zeros(condition.shape[0], self.target_dim).to(condition.device)
             with torch.no_grad():
-                bin_logmess = self.forward(condition, samples)
-            dist = Categorical(probs=bin_logmess[:, 0, :].exp())
+                bin_logmass = self.forward(condition, samples)
+            dist = Categorical(probs=bin_logmass[:, 0, :].exp())
             bin_idx = dist.sample()
             v = self.bins[0, bin_idx] 
             v = v + torch.rand_like(v) * (self.target_range[0, 1] - self.target_range[0, 0]) / self.num_bins
